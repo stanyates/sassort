@@ -1,17 +1,26 @@
+/**
+ * Performance test program for Prototype3.java.
+ * 
+ * Runs Prototype3.psort() with different segment sizes as well as Arrays.sort() and Arrays.parallelSort()
+ * with various input array sizes.  The test data is a reverse-ordered array of integers.
+ */
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
 public class Test3
 {
+    static final private int TEST_REPEAT_COUNT = 5;
+    
     public void perfTest()
     {
-        // <0 for Arrays.parallelSort(), 0 for Arrays.sort(), >0 for our psort()
+        // Hackish: <0 for Arrays.parallelSort(), 0 for Arrays.sort(), >0 for our psort()
         int[] segmentSizes = { -1, 0, 100, 1000, 10000, 100000 };
-        
         int[] dataSizes = { 100, 1000, 10000, 100000, 1000000, 10000000 };
         
         TreeMap<Integer, TreeMap<Integer, Long>> stats = new TreeMap<>();
+        
+        Prototype3 p = new Prototype3();
         
         for (int i = 0; i < dataSizes.length; i++)
         {
@@ -21,6 +30,19 @@ public class Test3
             {
                 int segmentSize = segmentSizes[j];
                 
+                String strategy;
+                
+                if (segmentSize > 0)
+                    strategy = "psort" + segmentSize;
+                else if (segmentSize == 0)
+                    strategy = "Arrays.sort";
+                else
+                    strategy = "Arrays.parallelSort";
+                
+                System.out.println("strategy=" + strategy + ", data size=" + dataSize);
+                                        
+                p.setSegmentSize( segmentSize );
+                
                 // Sequential, reverse-sorted values for test data.
                 int[] data = new int[dataSize];
                 int start = data.length;
@@ -28,8 +50,8 @@ public class Test3
                 {
                     data[d] = start--;
                 }
-                // Clone and sort with Arrays.sort to create known good result...with sequential values
-                // it's easy to test without this but this helps if I decide to generate random values instead.
+                
+                // Clone and sort with Arrays.sort to create a known good result to verify result against.
                 int[] target = data.clone();
                 Arrays.sort( target );
                 for (int t = 0; t < target.length; t++)
@@ -40,27 +62,36 @@ public class Test3
                     }
                 }
                 
-                long startTime = System.nanoTime();
-                if (segmentSize > 0 )
-                {
-                    Prototype3 p = new Prototype3(segmentSize);
-                    p.psort(data);
-                }
-                else if (segmentSize < 0)
-                {
-                    Arrays.parallelSort( data );
-                }
-                else
-                {
-                    Arrays.sort( data );                    
-                }
-                long elapsedTime = System.nanoTime() - startTime;
+                // Repeat a given test multiple times and report the average time.
                 
-                if (!Arrays.equals( data, target ))
+                long elapsedTime = 0;
+                
+                for ( int n = 0; n < TEST_REPEAT_COUNT; n++ )
                 {
-                    throw new RuntimeException("bad data in sorted result, dataSize=" + dataSize + ", segmentSize=" + segmentSize);
+                    long startTime = System.nanoTime();
+                    if ( segmentSize > 0 )
+                    {
+                        p.psort( data );
+                    }
+                    else if ( segmentSize < 0 )
+                    {
+                        Arrays.parallelSort( data );
+                    }
+                    else
+                    {
+                        Arrays.sort( data );
+                    }
+                    elapsedTime += System.nanoTime() - startTime;
+                    // Check the result data against the expected result.
+                    if ( !Arrays.equals( data, target ) )
+                    {
+                        throw new RuntimeException( "bad data in sorted result, dataSize=" + dataSize + ", segmentSize=" + segmentSize );
+                    } 
                 }
-
+                
+                elapsedTime /= (long)TEST_REPEAT_COUNT;
+                
+                // Store elapsed time for the run, indexed by strategy then by data set size.
                 TreeMap<Integer, Long> optionToElapsedTimeMap = stats.get( dataSize );
                 if (optionToElapsedTimeMap == null)
                 {
@@ -69,7 +100,7 @@ public class Test3
                 }
                 optionToElapsedTimeMap.put( segmentSize, elapsedTime );
                 
-                System.out.println(segmentSize + ", " + dataSize + ", " + String.format("%.6f", (double)elapsedTime / 1000000000));
+                //System.out.println(segmentSize + ", " + dataSize + ", " + String.format("%.6f", (double)elapsedTime / 1000000000));
             }
         }
         

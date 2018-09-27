@@ -1,13 +1,13 @@
-/**
- * Performance test program for Prototype3.java.
- * 
- * Runs Prototype3.psort() with different segment sizes as well as Arrays.sort() and Arrays.parallelSort()
- * with various input array sizes.  The test data is a reverse-ordered array of integers.
- */
 import java.util.Arrays;
 import java.util.Map;
 import java.util.TreeMap;
 
+/**
+ * Performance test program for Prototype3.java.
+ * <p>
+ * Runs Prototype4.psort() with different segment sizes as well as Arrays.sort() and Arrays.parallelSort()
+ * with various input array sizes.  The test data is a reverse-ordered array of integers.
+ */
 public class Test4
 {
     static final private int TEST_REPEAT_COUNT = 5;
@@ -143,5 +143,6 @@ public class Test4
     static public void main(String[] args)
     {
         new Test4().perfTest();
+        System.exit( 0 );
     }
 }

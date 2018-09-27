@@ -54,6 +54,11 @@ public class Prototype4
     {
     }
     
+    public void shutdown()
+    {
+        pool.shutdown();
+    }
+    
     public void setDebug(boolean debug)
     {
         this.debug = debug;
@@ -100,11 +105,6 @@ public class Prototype4
                 result.get();  // check for error; raises an exception if the worker raised an exception
             }
         }
-        catch ( InterruptedException ex )
-        {
-            System.out.println("Caught interrupted exception for first sort: " + ex );
-            Thread.currentThread().interrupt();
-        }
         catch ( Exception ex )
         {
             // TODO development only
@@ -126,11 +126,6 @@ public class Prototype4
             {
                 result.get();  // check for error; raises an exception if the worker raised an exception
             }
-        }
-        catch ( InterruptedException ex )
-        {
-            System.out.println("Caught interrupted exception for first merge: " + ex );
-            Thread.currentThread().interrupt();
         }
         catch ( Exception ex )
         {
